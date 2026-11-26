@@ -43,15 +43,24 @@ _PROJ_DIRS: dict[str, int] = {
 def _set_vis_style(sel, items: Sequence[Any], *, width: int | None = None, line_type: int | None = None) -> None:
     if not items:
         return
-    sel.clear()
-    for it in items:
-        sel.add(it)
-    vp = sel.vis_properties
-    if width is not None:
-        vp.set_real_width(width, 1)
-    if line_type is not None:
-        vp.set_real_line_type(line_type, 1)
-    sel.clear()
+    # Skip redundant CSO mutations for CATIA's default thin solid style (width=1, line_type=1)
+    if (width is None or width == 1) and (line_type is None or line_type == 1):
+        return
+    sel_com = getattr(sel, "com_object", sel)
+    try:
+        sel_com.Clear()
+        for it in items:
+            sel_com.Add(getattr(it, "com_object", it))
+        vp = sel_com.VisProperties
+        if width is not None and width != 1:
+            vp.SetRealWidth(int(width), 1)
+        if line_type is not None and line_type != 1:
+            vp.SetRealLineType(int(line_type), 1)
+    finally:
+        try:
+            sel_com.Clear()
+        except Exception:
+            pass
 
 
 def _add_poly(f2d, pts: Sequence[tuple[float, float]], *, closed: bool = True, bucket: list | None = None) -> list:
@@ -234,8 +243,13 @@ class TechnicalDrawingBuilder:
                 _add_poly(f_bg, [(c2, ty0 + (k + 1) * 6.4), (tx1, ty0 + (k + 1) * 6.4)], closed=False, bucket=thin)
             _add_text(t_bg, f"{lettre}   -", (c2 + tx1) / 2.0, yk, size=2.2)
 
-        _set_vis_style(self._sel, thick, width=3, line_type=1)
-        _set_vis_style(self._sel, thin, width=1, line_type=1)
+        try:
+            self.sheet.update()
+        except Exception:
+            pass
+        fresh_sel = self.editor.selection
+        _set_vis_style(fresh_sel, thick, width=3, line_type=1)
+        _set_vis_style(fresh_sel, thin, width=1, line_type=1)
 
         # Reactivate main working view
         DrawingView(self.views.item("View.1").com_object).activate()
