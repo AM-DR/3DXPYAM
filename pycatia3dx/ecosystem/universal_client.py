@@ -73,12 +73,48 @@ class Workbenches:
     PLM_VALIDATION = "VALValidationWkb"
 
 
+def _walk_part_from_reference(vpm_ref: Any, max_depth: int = 4) -> Part | None:
+    """Recursively locate the first ``Part`` inside a ``VPMReference`` hierarchy."""
+    if max_depth < 0 or vpm_ref is None:
+        return None
+    from pycatia3dx.mmr_automation_interfaces.part import Part
+    from pycatia3dx.product_structure_client.vpm_instance import VPMInstance
+
+    try:
+        reps = vpm_ref.rep_instances
+        for idx in range(1, reps.count + 1):
+            try:
+                part_obj = reps.item(idx).reference_instance_of.get_item("Part")
+                if part_obj is not None and hasattr(part_obj, "com_object"):
+                    return Part(part_obj.com_object)
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    try:
+        insts = vpm_ref.instances
+        for idx in range(1, insts.count + 1):
+            try:
+                inst = VPMInstance(insts.item(idx).com_object)
+                found = _walk_part_from_reference(inst.reference_instance_of, max_depth - 1)
+                if found is not None:
+                    return found
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    return None
+
+
 def extract_part_from_editor(editor: Editor | None) -> Part | None:
     """
     Extract a :class:`~pycatia3dx.mmr_automation_interfaces.part.Part` from
     ``editor`` if it is a ``3DShape`` editor or a ``3DPart`` / ``VPMReference``
-    product editor containing a shape representation. Returns ``None`` when the
-    editor is the Welcome Page (``Page d'accueil``) or a non-part document.
+    product editor containing a shape representation (including nested
+    ``Physical Product -> 3D Part -> 3D Shape`` hierarchies). Returns ``None``
+    when the editor is the Welcome Page (``Page d'accueil``) or a non-part document.
     """
     if editor is None:
         return None
@@ -98,11 +134,7 @@ def extract_part_from_editor(editor: Editor | None) -> Part | None:
             plm_prod_svc = PLMProductService(plm_prod_svc.com_object)
         root_occ = plm_prod_svc.root_occurrence
         vpm_ref = root_occ.reference_root_occurrence_of
-        if vpm_ref.rep_instances.count > 0:
-            rep_inst = vpm_ref.rep_instances[0]
-            part_obj = rep_inst.reference_instance_of.get_item("Part")
-            if part_obj is not None and hasattr(part_obj, "com_object"):
-                return Part(part_obj.com_object)
+        return _walk_part_from_reference(vpm_ref, max_depth=4)
     except Exception:
         pass
 
@@ -209,18 +241,18 @@ class UniversalClientController:
         sig = ", ".join(arg_names)
         indented = "\n".join(f"    {ln}" for ln in statements.splitlines())
         vb_code = (
-            f"Function _pycatia_inline({sig})\n"
+            f"Function pycatiaInline({sig})\n"
             f"    Dim RESULT\n"
             f"    RESULT = Empty\n"
             f"{indented}\n"
             f"    If IsObject(RESULT) Then\n"
-            f"        Set _pycatia_inline = RESULT\n"
+            f"        Set pycatiaInline = RESULT\n"
             f"    Else\n"
-            f"        _pycatia_inline = RESULT\n"
+            f"        pycatiaInline = RESULT\n"
             f"    End If\n"
             f"End Function"
         )
-        return self.evaluate_vbscript(vb_code, "_pycatia_inline", args)
+        return self.evaluate_vbscript(vb_code, "pycatiaInline", args)
 
     def run_macro_file(
         self,
