@@ -921,11 +921,30 @@ class DraftingAutomation:
             self._client = UniversalClientController(application=self.app)
         return self._client
 
+    @staticmethod
+    def _has_3d_shape(vpm_ref, depth: int = 0) -> bool:
+        if depth > 4:
+            return False
+        try:
+            if vpm_ref.rep_instances.count > 0:
+                return True
+        except Exception:
+            pass
+        try:
+            insts = vpm_ref.instances
+            for idx in range(1, insts.count + 1):
+                child_ref = insts.item(idx).reference_instance_of
+                if DraftingAutomation._has_3d_shape(child_ref, depth + 1):
+                    return True
+        except Exception:
+            pass
+        return False
+
     def find_active_product(self, name_hint: str | None = None):
         """
         Locate an open Physical Product (``VPMRootOccurrence``) that contains
-        at least one 3D representation and passes CATIA's generative view link
-        integrity check.
+        at least one 3D representation (directly or in a nested R2027x child
+        instance) and passes CATIA's generative view link integrity check.
         """
         dgs = DrawingGenService(self.app.get_session_service("CATDrawingGenService").com_object)
         candidates = []
@@ -940,7 +959,7 @@ class DraftingAutomation:
                 ps = ed.get_service("PLMProductService")
                 root_occ = ps.root_occurrence
                 vpm_ref = root_occ.reference_root_occurrence_of
-                if vpm_ref.rep_instances.count > 0 and dgs.check_view_link_integrity((root_occ,)):
+                if self._has_3d_shape(vpm_ref) and dgs.check_view_link_integrity((root_occ,)):
                     candidates.append((win.name, root_occ))
             except Exception:
                 continue
