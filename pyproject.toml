@@ -1,0 +1,51 @@
+[project]
+name = "3dxpyam"
+version = "0.1.0"
+dependencies = [
+    "pywin32 >= 306",
+    "psutil >= 5.9",
+]
+authors = [
+    { name = "Drissi Amjad", email = "17amjad2004@gmail.com" },
+    { name = "Paul Bourne", email = "evereux@gmail.com" },
+]
+maintainers = [
+    { name = "Drissi Amjad", email = "17amjad2004@gmail.com" },
+]
+description = "Python automation library for CATIA 3DEXPERIENCE Mechanical CAD (Part Design, Sketcher, GSD, Knowledgeware, Measure & Drafting)."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Topic :: Scientific/Engineering :: CAD",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://github.com/AM-DR/3DXPYAM"
+Repository = "https://github.com/AM-DR/3DXPYAM"
+Issues = "https://github.com/AM-DR/3DXPYAM/issues"
+Upstream = "https://github.com/evereux/pycatia3dx"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = [
+    "hatchling >= 1.32",
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pycatia3dx"]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"

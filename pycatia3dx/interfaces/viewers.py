@@ -1,0 +1,85 @@
+"""
+    Module initially auto generated using DSYAutomation files from CATIA 3DX R2025x on 2025-09-13 15:35:27.265802
+
+    .. warning::
+        The notes denoted "3DEXPERIENCE Automation Help" are to be used as reference only.
+        They are there as a guide as to how the visual basic / catscript functions work
+        and thus help debugging in pycatia.
+        
+"""
+from typing import Iterator
+
+from pycatia3dx.interfaces.viewer import Viewer
+from pycatia3dx.system.collection import Collection
+
+
+class Viewers(Collection):
+    """
+        .. note::
+
+            3DEXPERIENCE Automation Help (2025-09-13 15:35:27.265802)
+
+                SystemTS.IUnknown
+                    System.IDispatch
+                        System.CATBaseUnknown
+                            System.CATBaseDispatch
+                                System.Collection
+                                    Viewers
+                
+                A collection of all the Viewer objects currently attached to a
+                window.
+                For a SpecsAndGeomWindow object, the viewer containing the geometry is the
+                first viewer, and the viewer containing the specification tree is the second
+                viewer.
+    
+    """
+
+    def __init__(self, com_object):
+        super().__init__(com_object, child_object=Viewer)
+        self.com_object = com_object
+
+    def item(self, i_index: int) -> Viewer:
+        """
+        .. note::
+
+            3DEXPERIENCE Automation Help (2025-09-13 15:35:27.265802)
+                Func Item(long iIndex) As Viewer
+                    Returns a viewer using its index from the Viewers collection. The first
+                    item has the rank 1 in the collection.
+                
+                    Parameters:
+                
+                        iIndex
+                            The index or the name of the viewer to retrieve from the collection
+                            of viewers. As a numerics, this index is the rank of the viewer in the
+                            collection. The index of the first viewer in the collection is 1, and the index
+                            of the last viewer is Count. As a string, it is the name you assigned to the
+                            viewer using the AnyObject.Name property. 
+                
+                    Returns:
+                        The retrieved viewer 
+                
+                Example:
+                    This example returns in MyViewer the second viewer in the
+                    collection.
+                
+                     Dim MyViewer As Viewer
+                     Set MyViewer = Viewer.Item(2)
+
+        :param int i_index:
+        :return: Viewer
+        """
+        return Viewer(self.com_object.Item(i_index))
+
+    def __getitem__(self, n: int) -> Viewer:
+        if (n + 1) > self.count:
+            raise StopIteration
+
+        return Viewer(self.com_object.Item(n + 1))
+
+    def __iter__(self) -> Iterator[Viewer]:
+        for i in range(self.count):
+            yield Viewer(self.com_object.Item(i + 1))
+
+    def __repr__(self):
+        return f'Viewers(name="{self.name}")'
