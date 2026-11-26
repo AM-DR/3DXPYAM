@@ -285,5 +285,14 @@ class Parameter(AnyObject):
         """
         return self.com_object.ValueAsString()
 
+    @property
+    def value(self):
+        """Return the underlying COM ``Value`` property (for Int/Real/Bool/Str/Dimension parameters)."""
+        return self.com_object.Value
+
+    @value.setter
+    def value(self, val) -> None:
+        self.com_object.Value = val
+
     def __repr__(self):
         return f'Parameter(name="{self.name}")'

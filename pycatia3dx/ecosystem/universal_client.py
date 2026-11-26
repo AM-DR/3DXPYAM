@@ -31,6 +31,7 @@ class Workbenches:
     """Common 3DEXPERIENCE App / Workbench identifiers across Dassault Systèmes brands."""
 
     # CATIA Design & Engineering
+    PRODUCT_STRUCTURE = "PrsConfiguration"
     PART_DESIGN = "PrtCfg"
     GENERATIVE_SHAPE_DESIGN = "PKT"
     WIREFRAME_AND_SURFACE = "WksCfg"
@@ -174,8 +175,70 @@ class UniversalClientController:
         """Activate any 3DEXPERIENCE app/workbench by ID (see :class:`Workbenches`)."""
         self.application.start_workbench(workbench_id)
 
-    def run_command(self, command_id: str) -> None:
-        """Trigger a one-shot 3DEXPERIENCE command header by ID or localized title."""
+    def launch_app(
+        self,
+        app_or_workbench_id: str,
+        *,
+        wait_workbench: str | None = None,
+        wait_new_window: bool = False,
+        timeout: float = 20.0,
+    ) -> str:
+        """
+        Launch any 3DEXPERIENCE Compass App natively via the built-in global
+        ``AfrStartApp`` command header (always available across workbenches,
+        avoiding ``Unknown command`` modal popups).
+        """
+        import time
+
+        target = str(app_or_workbench_id or "").strip()
+        if not target:
+            raise ValueError("app_or_workbench_id must be a non-empty string.")
+        try:
+            before_wins = int(self.application.windows.count)
+        except Exception:
+            before_wins = 0
+        self.application.start_command(f"AfrStartApp {target}")
+        expected_wb = wait_workbench or (target if " " not in target else None)
+        deadline = time.time() + max(0.5, float(timeout))
+        while time.time() < deadline:
+            try:
+                cur_wb = str(self.application.get_workbench_id() or "").strip()
+            except Exception:
+                cur_wb = ""
+            try:
+                cur_wins = int(self.application.windows.count)
+            except Exception:
+                cur_wins = 0
+            if ((not wait_new_window) or cur_wins > before_wins) and ((not expected_wb) or cur_wb == expected_wb):
+                return cur_wb
+            time.sleep(0.35)
+        try:
+            return str(self.application.get_workbench_id() or "").strip()
+        except Exception:
+            return ""
+
+    def run_command(self, command_id: str, *, require_open_window: bool = True) -> None:
+        """
+        Trigger a one-shot 3DEXPERIENCE command header by ID or localized title.
+
+        Checks that at least one window and an active workbench exist when
+        ``require_open_window=True`` so 3DEXPERIENCE does not display an
+        ``Unknown command`` modal popup on an empty session.
+        """
+        if require_open_window:
+            try:
+                win_cnt = int(self.application.windows.count)
+            except Exception:
+                win_cnt = 0
+            try:
+                wb = str(self.application.get_workbench_id() or "").strip()
+            except Exception:
+                wb = ""
+            if win_cnt <= 0 or not wb:
+                raise RuntimeError(
+                    f"Cannot run command {command_id!r} with {win_cnt} open window(s) "
+                    f"and workbench={wb!r}; open a compatible document first."
+                )
         self.application.start_command(command_id)
 
     def session_service(self, service_id: str) -> Service:
@@ -320,6 +383,28 @@ class UniversalClientController:
             from pycatia3dx.interfaces.editor import Editor
 
             return Editor(unwrap_com_arg(edt))
+
+    def open_in_new_window(self, plm_entity: Any) -> Editor:
+        """
+        Open an already-loaded authoring ``PLMEntity`` (such as an in-session
+        ``VPMReference`` / ``3D Part``) in its own top-level window via
+        ``PLMOpenService.PLMOpenInNewWindow``.
+        """
+        from pycatia3dx.interfaces.editor import Editor
+
+        open_svc = self.session_service("PLMOpenService")
+        raw_entity = unwrap_com_arg(plm_entity)
+        vb_code = (
+            "Function pycatiaOpenInNewWin(openSvc, entity)\n"
+            "    Dim oEdt\n"
+            "    openSvc.PLMOpenInNewWindow entity, oEdt\n"
+            "    Set pycatiaOpenInNewWin = oEdt\n"
+            "End Function"
+        )
+        edt = self.evaluate_vbscript(vb_code, "pycatiaOpenInNewWin", [open_svc, raw_entity])
+        if edt is None:
+            return self.application.active_editor
+        return Editor(unwrap_com_arg(edt))
 
     def create_plm_entity(
         self,
