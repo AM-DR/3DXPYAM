@@ -19,7 +19,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Operating System :: Microsoft :: Windows :: Windows 11",
-    "Topic :: Scientific/Engineering :: CAD",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
 ]
 license = "MIT"
 license-files = ["LICENSE"]
