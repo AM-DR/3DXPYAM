@@ -12,11 +12,14 @@ Includes:
 from __future__ import annotations
 
 from pycatia3dx.ecosystem.core_helpers import (
+    PRD_WORKBENCHES,
     add_formula,
     constrain_hole_origin,
     measure_body,
     open_part_in_physical_product,
     param_name_for_relation,
+    resolve_command_title,
+    resolve_nls_message,
     snapshot_topology_refs,
 )
 from pycatia3dx.ecosystem.discovery import (
@@ -47,6 +50,7 @@ __all__ = [
     "DraftingAutomation",
     "DynamicCOMObject",
     "DynamicCOMService",
+    "PRD_WORKBENCHES",
     "TechnicalDrawingBuilder",
     "ThreeDXInstallation",
     "UniversalClientController",
@@ -61,6 +65,8 @@ __all__ = [
     "open_part_in_physical_product",
     "param_name_for_relation",
     "parse_catenv_file",
+    "resolve_command_title",
+    "resolve_nls_message",
     "snapshot_topology_refs",
     "snake_to_com_candidates",
     "unwrap_com_arg",

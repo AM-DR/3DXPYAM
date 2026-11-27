@@ -2,7 +2,7 @@
 name = "3dxpyam"
 version = "0.1.0"
 dependencies = [
-    "pywin32 >= 306",
+    "pywin32 >= 306; sys_platform == 'win32'",
     "psutil >= 5.9",
 ]
 authors = [
@@ -37,7 +37,7 @@ dev = [
 
 [build-system]
 requires = [
-    "hatchling >= 1.32",
+    "hatchling >= 1.27",
 ]
 build-backend = "hatchling.build"
 

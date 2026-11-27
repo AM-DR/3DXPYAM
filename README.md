@@ -23,10 +23,10 @@ It provides a focused, reliable Python interface around the core mechanical desi
 
 ## Requirements
 
-- **OS:** Windows 10 / 11
-- **Python:** 3.11+
-- **CAD:** Dassault Systèmes **3DEXPERIENCE** rich client (R2025x, R2026x, or R2027x)
-- **Dependencies:** `pywin32 >= 306`, `psutil >= 5.9`
+- **OS:** Windows 10 / 11 for live CATIA COM automation (installable on macOS/Linux for UI development & offline testing)
+- **Python:** 3.11+ (**64-bit** on Windows, running at the same privilege level as `3DEXPERIENCE.exe`)
+- **CAD:** Dassault Systèmes **3DEXPERIENCE** rich client (R2025x, R2026x, or R2027x — **any UI language**: English, French, German, Spanish, Italian, Japanese, Chinese, etc.)
+- **Dependencies:** `pywin32 >= 306` (Windows only), `psutil >= 5.9`
 
 ---
 
@@ -108,11 +108,13 @@ See [`examples/example__parametric_block_r2027x.py`](examples/example__parametri
 
 ---
 
-## R2027x Compatibility Highlights
+## R2027x, Multi-Language & UI Compatibility Highlights
 
-- **Physical Product + 3D Part workflow:** `dx.open_part_in_physical_product()` automatically detects 3DEXPERIENCE R2027x (`release >= 429`), where `StartCommand("3D Part")` is no longer directly callable from the Welcome Page, and creates a `Physical Product` followed by inserting a `3D Part`.
-- **Safe Knowledgeware formulas:** `add_formula()` uses `Parameters.GetNameToUseInRelation()` so references containing spaces (e.g., `` `Geometrical Set.1\Plane.1\Offset` ``) are properly escaped and validated.
+- **Any 3DEXPERIENCE UI language:** Command titles are resolved dynamically from 3DEXPERIENCE's own runtime message catalog (`SystemService.GetMessage` via `resolve_command_title()`), drawing views are indexed numerically instead of by English name (`View.1`/`View.2`), hole sketch points are matched by `CatGeometricType.catGeoTypePoint2D`, and PDF export auto-discovers any installed PDF virtual printer.
+- **Physical Product + 3D Part workflow (popup-free):** `dx.open_part_in_physical_product()` works cleanly across R2025x–R2027x (`release >= 429`) without triggering blocking `Unknown command` modal dialogs on empty sessions or non-English locales.
+- **Safe Knowledgeware formulas:** `add_formula()` uses `Parameters.GetNameToUseInRelation()` so references containing spaces or localized feature names (e.g., `` `Geometrical Set.1\Plane.1\Offset` ``) are properly escaped and validated.
 - **CSO-safe B-Rep inspection:** `snapshot_topology_refs()` captures `Selection.Search` references before calling `MeasurableService`, avoiding mid-loop selection resets inside `Physical Product` editors.
+- **GUI / Web Backend integration note:** Windows COM is single-threaded (STA). When embedding `3DXPYAM` inside a desktop GUI (Tkinter, PyQt/PySide) or web backend (FastAPI, Flask, Streamlit), run all `ThreeDExperience` calls on a **single dedicated worker thread** so COM objects are never shared across threads.
 
 ---
 

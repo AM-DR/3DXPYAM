@@ -61,13 +61,19 @@ class ThreeDExperience:
             self._app = catia3dx(auto_launch=True, launch_timeout=wait_timeout)
         return self._app
 
-    def open_part_in_physical_product(self, *, reuse_empty: bool = True):
+    def open_part_in_physical_product(
+        self,
+        *,
+        reuse_empty: bool = True,
+        name: str | None = None,
+    ):
         """
         Create (or reuse an empty) ``3D Shape`` inside a ``Physical Product``.
 
-        Supports both R2025x–R2026x and R2027x (``release >= 429``).
+        Supports R2025x–R2027x (``release >= 429``) and **all 3DEXPERIENCE UI
+        languages** (resolving localized commands dynamically via NLS catalogs).
         """
-        return open_part_in_physical_product(self, self.catia, reuse_empty=reuse_empty)
+        return open_part_in_physical_product(self, self.catia, reuse_empty=reuse_empty, name=name)
 
     def ensure_part(self, name: str | None = None, *, create_if_missing: bool = True):
         """Return an active ``Part`` automatically (reusing open part, opening by name, or creating one)."""

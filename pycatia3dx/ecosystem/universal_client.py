@@ -241,6 +241,38 @@ class UniversalClientController:
                 )
         self.application.start_command(command_id)
 
+    def resolve_command_title(
+        self,
+        catalog_name: str,
+        message_key: str,
+        default_title: str,
+    ) -> str:
+        """
+        Resolve a 3DEXPERIENCE command's localized title from the active UI
+        language's NLS message catalog (works across all 3DEXPERIENCE locales).
+        """
+        from pycatia3dx.ecosystem.core_helpers import resolve_command_title
+
+        return resolve_command_title(self.application, catalog_name, message_key, default_title)
+
+    def run_localized_command(
+        self,
+        catalog_name: str,
+        message_key: str,
+        default_title: str,
+        *,
+        require_open_window: bool = True,
+    ) -> str:
+        """
+        Resolve a command title dynamically in the active 3DEXPERIENCE UI
+        language and invoke it through :meth:`run_command`.
+
+        Returns the resolved localized command title that was executed.
+        """
+        title = self.resolve_command_title(catalog_name, message_key, default_title)
+        self.run_command(title, require_open_window=require_open_window)
+        return title
+
     def session_service(self, service_id: str) -> Service:
         """
         Retrieve *any* session-level service (typed wrapper if known, or

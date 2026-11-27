@@ -25,6 +25,7 @@ from pycatia3dx.ecosystem import (
     DraftingAutomation,
     DynamicCOMObject,
     DynamicCOMService,
+    PRD_WORKBENCHES,
     TechnicalDrawingBuilder,
     UniversalClientController,
     Workbenches,
@@ -33,6 +34,8 @@ from pycatia3dx.ecosystem import (
     measure_body,
     open_part_in_physical_product,
     param_name_for_relation,
+    resolve_command_title,
+    resolve_nls_message,
     snapshot_topology_refs,
 )
 from pycatia3dx.hub import ThreeDExperience

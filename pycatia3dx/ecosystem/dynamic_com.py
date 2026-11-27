@@ -282,14 +282,14 @@ class DynamicCOMObject(AnyObject):
         sig_params = ", ".join(["targetObj", *in_names])
         call_params = ", ".join([*in_names, "arr"])
         vb_code = (
-            f"Function _pycatia_dyn_arr({sig_params})\n"
+            f"Function pycatiaDynArr({sig_params})\n"
             f"    On Error Resume Next\n"
             f"    ReDim arr({ubound})\n"
             f"    targetObj.{method_name} {call_params}\n"
             f"    If Err.Number <> 0 Then\n"
-            f"        _pycatia_dyn_arr = Empty\n"
+            f"        pycatiaDynArr = Empty\n"
             f"    Else\n"
-            f"        _pycatia_dyn_arr = arr\n"
+            f"        pycatiaDynArr = arr\n"
             f"    End If\n"
             f"End Function"
         )
@@ -297,7 +297,7 @@ class DynamicCOMObject(AnyObject):
         res = self.application.system_service.evaluate(
             vb_code,
             CATScriptLanguage.CATVBScriptLanguage,
-            "_pycatia_dyn_arr",
+            "pycatiaDynArr",
             eval_params,
         )
         if res is None:

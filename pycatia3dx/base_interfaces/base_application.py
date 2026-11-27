@@ -509,6 +509,14 @@ def catia_application(
     if os.environ.get("PYCATIA3DX_AUTO_LAUNCH", "").lower() in ("1", "true", "yes"):
         auto_launch = True
 
+    # Ensure COM apartment is initialized on the calling thread on normal desktops
+    # (helps GUI / web-backend worker threads without interfering with non-Default desktop marshaling).
+    if pythoncom is not None and _current_desktop_name().lower() in ("", "default"):
+        try:
+            pythoncom.CoInitialize()
+        except Exception:
+            pass
+
     if prog_id != "CATIA.Application":
         if Dispatch is None:
             raise ImportError("pywin32 is required to dispatch COM objects on Windows.")

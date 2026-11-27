@@ -1,8 +1,8 @@
 """
-The pycatia3dx / 3dxpy version.
+The 3DXPYAM (pycatia3dx) version.
 
 Resolved in this order so that it works whatever the current working directory
-is and whether pycatia3dx is installed (pip) or used from a source checkout:
+is and whether 3DXPYAM is installed (pip) or used from a source checkout:
 
 1. pyproject.toml next to the package (source checkout / editable install).
 2. The installed distribution metadata.
@@ -18,10 +18,10 @@ def _read_version() -> str:
         with open(pyproject_path, "rb") as f:
             config = tomllib.load(f)
         project = config.get("project", {})
-        if project.get("name") in ("3dxpy", "pycatia3dx") and project.get("version"):
+        if project.get("name") in ("3dxpyam", "3dxpy", "pycatia3dx") and project.get("version"):
             return project["version"]
 
-    for pkg_name in ("3dxpy", "pycatia3dx"):
+    for pkg_name in ("3dxpyam", "3dxpy", "pycatia3dx"):
         try:
             return metadata.version(pkg_name)
         except metadata.PackageNotFoundError:

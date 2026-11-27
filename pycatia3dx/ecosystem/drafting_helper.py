@@ -1,7 +1,7 @@
 """
 High-Level 3D-Linked Generative Drafting & PDF Export Automation for 3DEXPERIENCE.
 
-Allows any ``pycatia3dx`` / ``3dxpy`` user to generate a complete ISO technical
+Allows any ``3DXPYAM`` (``pycatia3dx``) user to generate a complete ISO technical
 drawing (with true 3D-linked generative views, section cuts, title block,
 annotations/dimensions, and direct PDF export) from an open Physical Product
 (``VPMReference`` / ``VPMRootOccurrence``) in just a few lines of Python.
@@ -138,6 +138,19 @@ class TechnicalDrawingBuilder:
     # ------------------------------------------------------------------
     # ISO Border & Title Block (Background View)
     # ------------------------------------------------------------------
+    def _get_builtin_view(self, one_based_index: int, fallback_name: str) -> DrawingView:
+        """
+        Retrieve a sheet's built-in Main View (index ``1``) or Background View
+        (index ``2``) by 1-based index so it works in **any** 3DEXPERIENCE UI
+        language (e.g. ``View.2`` in English, ``Calque de fond`` / ``Vue.2`` in
+        French, etc.), falling back to ``fallback_name`` only if indexing fails.
+        """
+        try:
+            view_obj = self.views.item(one_based_index)
+        except Exception:
+            view_obj = self.views.item(fallback_name)
+        return DrawingView(getattr(view_obj, "com_object", view_obj))
+
     def add_iso_title_block(
         self,
         *,
@@ -148,11 +161,11 @@ class TechnicalDrawingBuilder:
         scale_label: str = "1:1",
         paper_label: str = "A4",
         sheet_number: str = "1/1",
-        note: str = "Generated with 3dxpy (pycatia3dx)",
+        note: str = "Generated with 3DXPYAM (pycatia3dx)",
         first_angle: bool = True,
     ) -> None:
-        """Draw an ISO frame, zone grid (D-C-B-A / 4-3-2-1), and title block in View.2."""
-        bg_view = DrawingView(self.views.item("View.2").com_object)
+        """Draw an ISO frame, zone grid (D-C-B-A / 4-3-2-1), and title block in the Background View."""
+        bg_view = self._get_builtin_view(2, "View.2")
         bg_view.activate()
         f_bg = bg_view.factory_2d
         t_bg = bg_view.texts
@@ -251,8 +264,8 @@ class TechnicalDrawingBuilder:
         _set_vis_style(fresh_sel, thick, width=3, line_type=1)
         _set_vis_style(fresh_sel, thin, width=1, line_type=1)
 
-        # Reactivate main working view
-        DrawingView(self.views.item("View.1").com_object).activate()
+        # Reactivate main working view (1-based index 1, language-independent)
+        self._get_builtin_view(1, "View.1").activate()
 
     # ------------------------------------------------------------------
     # True 3D-Linked Generative Views
@@ -885,11 +898,45 @@ class TechnicalDrawingBuilder:
     # ------------------------------------------------------------------
     # Direct PDF Export
     # ------------------------------------------------------------------
+    def _resolve_pdf_printer(self, printer_name: str | None = "Microsoft Print to PDF"):
+        """
+        Locate the requested PDF printer, or automatically discover any installed
+        PDF virtual printer (e.g. ``Microsoft Print to PDF``, ``Adobe PDF``,
+        ``PDFCreator``, localized Windows PDF printers) if the exact name is not found.
+        """
+        printers = self.app.printers
+        if printer_name:
+            try:
+                return printers.item(printer_name)
+            except Exception:
+                pass
+
+        available: list[str] = []
+        try:
+            count = int(printers.count)
+        except Exception:
+            count = 0
+
+        for idx in range(1, count + 1):
+            try:
+                pr = printers.item(idx)
+                label = str(getattr(pr, "device_name", "") or getattr(pr, "name", "") or "")
+                available.append(label)
+                if "pdf" in label.lower():
+                    return pr
+            except Exception:
+                continue
+
+        raise RuntimeError(
+            f"Could not find PDF printer {printer_name!r} in 3DEXPERIENCE. "
+            f"Available printers: {available or ['<none>']}."
+        )
+
     def export_pdf(
         self,
         output_path: str | os.PathLike,
         *,
-        printer_name: str = "Microsoft Print to PDF",
+        printer_name: str | None = "Microsoft Print to PDF",
     ) -> Path:
         """Export the active CATIA Drawing Sheet directly to a PDF file."""
         self.sheet.update()
@@ -898,7 +945,7 @@ class TechnicalDrawingBuilder:
         if out.exists():
             out.unlink()
 
-        pdf_printer = self.app.printers.item(printer_name)
+        pdf_printer = self._resolve_pdf_printer(printer_name)
         self.app.active_printer = pdf_printer
 
         ps = self.sheet.page_setup

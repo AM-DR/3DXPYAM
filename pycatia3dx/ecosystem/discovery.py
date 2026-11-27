@@ -441,7 +441,7 @@ def _collect_catenv_files(install_roots: Sequence[pathlib.Path] = ()) -> list[pa
             seen.add(f)
             found.append(f)
 
-    # 1. Installation-local CATEnv folders first (e.g. D:\New folder (5)\New folder\CATEnv\Env.txt)
+    # 1. Installation-local CATEnv folders first (e.g. D:\DassaultSystemes\B429\CATEnv\Env.txt)
     for root in install_roots:
         local_catenv = root / "CATEnv"
         if _safe_exists(local_catenv):

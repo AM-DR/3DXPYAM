@@ -2,7 +2,7 @@
 Example - Drafting - 003 (Automated 3D-Linked Generative Drawing & PDF Export)
 
 Description:
-    Demonstrates the high-level ``dx.drafting`` automation helper in 3dxpy
+    Demonstrates the high-level ``dx.drafting`` automation helper in 3DXPYAM
     (pycatia3dx) to automatically generate a complete ISO A4 technical drawing
     with true 3D-linked Generative Views (Front, Projection, Section A-A,
     Section B-B, Isometric), ISO title block, annotations, and direct PDF export
@@ -32,7 +32,7 @@ def main():
     # 2. Add ISO frame, zone grid, and title block in Background View
     dwg.add_iso_title_block(
         title="AUTOMATED TECHNICAL DRAWING",
-        organization="3dxpy / pycatia3dx",
+        organization="3DXPYAM / pycatia3dx",
         author="Drissi Amjad",
         scale_label="1:1",
         paper_label="A4",
