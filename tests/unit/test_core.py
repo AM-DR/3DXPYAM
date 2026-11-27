@@ -356,6 +356,19 @@ class TestCorePackage(unittest.TestCase):
             _ = svc.root_occurrence
         self.assertIn("open_part_in_physical_product", str(ctx.exception))
 
+    def test_ribbed_bracket_example_analytical_volume_and_importable(self):
+        import importlib.util
+        from pathlib import Path
+
+        ex_path = Path(__file__).resolve().parents[2] / "examples" / "example__ribbed_bracket_full_part.py"
+        spec = importlib.util.spec_from_file_location("example_ribbed_bracket", ex_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        # Base (18,651.86) + Upper Boss (18,762.01) + Rib (3,087.00) - Hole (5,301.44) = 35,199.44 mm^3
+        vol = mod.analytical_volume_mm3()
+        self.assertAlmostEqual(vol, 35199.4376, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()

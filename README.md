@@ -104,7 +104,10 @@ vol_mm3, area_mm2, cog = measure_body(measure_svc, body)
 print(f"Volume = {vol_mm3:,.2f} mm³ | Area = {area_mm2:,.2f} mm² | COG = {cog}")
 ```
 
-See [`examples/example__parametric_block_r2027x.py`](examples/example__parametric_block_r2027x.py) for a complete runnable script including chamfers, counterbored holes, formulas, and metrology.
+See runnable full-part examples in `examples/`:
+- [`examples/example__ribbed_bracket_full_part.py`](examples/example__ribbed_bracket_full_part.py) — Complete multi-feature **Parametric Ribbed Bracket** (Ø30 boss, R7.5 coaxial through-hole, chamfered base plate, symmetric 7 mm central stiffener rib, 100% green sketches & analytical volume verification)
+- [`examples/example__parametric_block_r2027x.py`](examples/example__parametric_block_r2027x.py) — Prismatic block with chamfers, through-hole, Knowledgeware formulas & metrology
+- [`examples/example__drafting__003_auto_pdf.py`](examples/example__drafting__003_auto_pdf.py) — Automated 3D-linked ISO A4 multi-view technical drawing & PDF export
 
 ---
 
