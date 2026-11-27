@@ -11,6 +11,13 @@ Demonstrates the core mechanical CAD workflow in 3DXPYAM:
   6. Measure volume, surface area, and center of gravity
 """
 
+from pathlib import Path
+import sys
+
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from pycatia3dx import (
     CATMeasurableType,
     CatChamferMode,

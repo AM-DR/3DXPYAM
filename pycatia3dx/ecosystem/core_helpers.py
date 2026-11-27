@@ -196,20 +196,25 @@ def _ensure_prd_workbench(dx: Any, app: Any, *, bootstrap_if_empty: bool = True)
                     return True, None
                 ed = app.active_editor
                 _ = ed.get_service("PLMProductService")
-                app.start_workbench("PrsConfiguration")
+                for wb_target in ("PrsConfiguration", "Assembly"):
+                    try:
+                        app.start_workbench(wb_target)
+                        time.sleep(0.35)
+                        if _safe_workbench_id(app) in PRD_WORKBENCHES:
+                            return True, None
+                    except Exception:
+                        continue
+            except Exception:
+                continue
+
+        for wb_target in ("PrsConfiguration", "Assembly"):
+            try:
+                app.start_workbench(wb_target)
                 time.sleep(0.35)
                 if _safe_workbench_id(app) in PRD_WORKBENCHES:
                     return True, None
             except Exception:
                 continue
-
-        try:
-            app.start_workbench("PrsConfiguration")
-            time.sleep(0.35)
-            if _safe_workbench_id(app) in PRD_WORKBENCHES:
-                return True, None
-        except Exception:
-            pass
 
     if not bootstrap_if_empty or dx is None or not hasattr(dx, "client"):
         return False, None
@@ -329,11 +334,14 @@ def open_part_in_physical_product(
             vr_cur = ro_cur.reference_root_occurrence_of
 
             if _safe_workbench_id(app) not in PRD_WORKBENCHES:
-                try:
-                    app.start_workbench("PrsConfiguration")
-                    time.sleep(0.35)
-                except Exception:
-                    pass
+                for wb_target in ("PrsConfiguration", "Assembly"):
+                    try:
+                        app.start_workbench(wb_target)
+                        time.sleep(0.35)
+                        if _safe_workbench_id(app) in PRD_WORKBENCHES:
+                            break
+                    except Exception:
+                        continue
 
             if _safe_workbench_id(app) in PRD_WORKBENCHES:
                 before_cnt = vr_cur.instances.count

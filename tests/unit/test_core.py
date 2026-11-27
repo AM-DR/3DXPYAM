@@ -318,6 +318,44 @@ class TestCorePackage(unittest.TestCase):
         self.assertAlmostEqual(area, 500.0)
         self.assertEqual(cog, (10.0, 20.0, 30.0))
 
+    def test_examples_never_shadow_stdlib_and_self_healing_guards_work(self):
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        repo_root = Path(__file__).resolve().parents[2]
+        pkg_dir = repo_root / "pycatia3dx"
+
+        # 1. No example script may insert `..\pycatia3dx` into sys.path
+        for ex in sorted((repo_root / "examples").glob("*.py")):
+            src = ex.read_text(encoding="utf-8", errors="ignore")
+            self.assertNotIn("..\\pycatia3dx", src, f"{ex.name} inserts inner pycatia3dx/ into sys.path")
+            self.assertNotIn("../pycatia3dx", src, f"{ex.name} inserts inner pycatia3dx/ into sys.path")
+
+        # 2. Even if someone mistakenly puts pycatia3dx/ on sys.path[0], stdlib types & os still load cleanly
+        code = (
+            f"import sys; sys.path.insert(0, {str(pkg_dir)!r}); sys.path.insert(1, {str(repo_root)!r}); "
+            "import enum, types, os; "
+            "assert hasattr(types, 'GenericAlias') and hasattr(types, 'MappingProxyType'); "
+            "assert hasattr(os, 'path'); "
+            "from pycatia3dx import ThreeDExperience, catia3dx; "
+            "from pycatia3dx.types.general import CATVariant; "
+            "print('GUARD_OK')"
+        )
+        proc = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True, check=False)
+        self.assertEqual(proc.returncode, 0, f"Subprocess failed:\nSTDOUT: {proc.stdout}\nSTDERR: {proc.stderr}")
+        self.assertIn("GUARD_OK", proc.stdout)
+
+    def test_plm_product_service_root_occurrence_friendly_error(self):
+        from pycatia3dx.vpm_editor_context.plm_product_service import PLMProductService
+
+        bad_com = MagicMock()
+        type(bad_com).RootOccurrence = property(lambda _self: (_ for _ in ()).throw(RuntimeError("COM E_NOINTERFACE")))
+        svc = PLMProductService(bad_com)
+        with self.assertRaises(RuntimeError) as ctx:
+            _ = svc.root_occurrence
+        self.assertIn("open_part_in_physical_product", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

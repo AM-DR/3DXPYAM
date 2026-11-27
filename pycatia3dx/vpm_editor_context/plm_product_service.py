@@ -69,8 +69,14 @@ class PLMProductService(Service):
 
         :return: VPMRootOccurrence
         """
-
-        return VPMRootOccurrence(self.com_object.RootOccurrence)
+        try:
+            return VPMRootOccurrence(self.com_object.RootOccurrence)
+        except Exception as exc:
+            raise RuntimeError(
+                "PLMProductService.RootOccurrence failed. The active 3DEXPERIENCE tab is not "
+                "a Physical Product / 3DPart (it may be the Welcome Page or a standalone 3DShape). "
+                "Open a Physical Product or call ThreeDExperience().open_part_in_physical_product() first."
+            ) from exc
 
     def compose_link(
         self,

@@ -3,39 +3,32 @@
     Example - 3DPart - 001
 
     Description:
-        Create new hybrid body in currently opened 3DPart.
+        Create a new Hybrid Body (Geometrical Set) inside a 3DPart / Physical Product.
 
-        A 3DPart is a VPMReference that contains a 3DShape. A 3DPart
-        (or VPMReference) can only be created if the user has access to the
-        correct license.
+        Automatically reuses an open 3DPart/3DShape or creates a new Physical Product
+        with a 3DPart (works across R2025x–R2027x and any 3DEXPERIENCE UI language).
 
     Requirements:
-        - 3DExperience CATIA running.
+        - 3DEXPERIENCE CATIA running.
 
 """
-
-##########################################################
-# insert syspath to project folder so examples can be run.
-# for development purposes.
-import os
+from pathlib import Path
 import sys
 
-sys.path.insert(0, os.path.abspath("..\\pycatia3dx"))
-##########################################################
+# Insert the repository root (NOT the inner pycatia3dx/ folder) so examples can
+# be run directly without `pip install -e .` and without shadowing stdlib modules.
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-from pycatia3dx import catia3dx
-from pycatia3dx.mmr_automation_interfaces.part import Part
-from pycatia3dx.vpm_editor_context.plm_product_service import PLMProductService
+from pycatia3dx import ThreeDExperience
 
-application = catia3dx()
-editor = application.active_editor
+dx = ThreeDExperience()
+editor, part = dx.open_part_in_physical_product(reuse_empty=True)
 
-plm_product_service: PLMProductService = editor.get_service('PLMProductService')
-root_occurrence = plm_product_service.root_occurrence
-vpm_reference = root_occurrence.reference_root_occurrence_of
-vpm_rep_instance = vpm_reference.rep_instances[0]
-
-part: Part = vpm_rep_instance.reference_instance_of.get_item('Part')
 hybrid_bodies = part.hybrid_bodies
 hybrid_body = hybrid_bodies.add()
-hybrid_body.name = 'My New Hybrid Body'
+hybrid_body.name = "My New Hybrid Body"
+part.update()
+
+print(f"Created Hybrid Body '{hybrid_body.name}' in part '{part.name}'.")
